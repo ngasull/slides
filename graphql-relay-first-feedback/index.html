@@ -1,0 +1,416 @@
+<html>
+  <head>
+    <title>GraphQL + Relay first retrospective</title>
+    <link rel="stylesheet" href="../node_modules/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../node_modules/reveal.js/css/theme/moon.css">
+    <link rel="stylesheet" href="../assets/lib/css/zenburn.css">
+    <style>
+      strong {
+        color: #fa0;
+      }
+
+      b {
+        color: #fff;
+        font-weight: bold;
+      }
+
+      .reveal h2,
+      .reveal h4 {
+        text-transform: none;
+      }
+
+      .reveal .code-side-bg {
+        position: absolute;
+        top: -500%;
+        right: -100%;
+        bottom: -500%;
+        left: 60%;
+        background: #000;
+        z-index: 0;
+      }
+
+      .reveal .code-side-row {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 3%;
+        font-size: 0.8em;
+      }
+
+      .reveal .code-side-row:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+
+      .reveal .code-side-left {
+        width: 60%;
+        float: left;
+        box-sizing: border-box;
+        padding: 0 2%;
+        text-align: right;
+        color: #eee8d5;
+      }
+
+      .reveal .code-side-right {
+        float: right;
+        width: 40%;
+        box-sizing: border-box;
+        padding: 0 2%;
+        text-align: left;
+        color: #eee8d5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!--
+  Motivation
+    GraphQL
+      - Common language front/back
+      - True definition of the API
+    Relay
+      - Typed and checked data
+      - Conventions
+
+  The good parts
+    - Fragments: each component declare its own data requirements, parents propagate these requirements
+    - Automatic flow types generation: manipulated data is typed
+    - Retrictive way to handle data: relay forces declarativeness of data across components
+    - Business-oriented mutations and subscriptions
+    - Well-managed pagination and relay helpers around it
+
+  The drawbacks
+    - Relay's retrictions sometimes limits us:
+      - No way to make dynamic queries: can't make a query parametrized by a list of fields or fragments. Must be static.
+      - Caching capabilities aren't obvious
+      - Relay's documentation doesn't go deep (to purposely stay blackboxed)
+    - No clear way to manage subscriptions
+-->
+
+<section data-markdown><textarea data-template>
+
+  ## From REST to GraphQL and Relay
+
+</textarea></section>
+<section data-markdown><textarea data-template>
+
+  ### Motivation
+
+  <div style="box-sizing: border-box; float: left; width: 50%; padding: 0 5%;">
+    <h4>GraphQL</h4>
+    <ul>
+      <li>Dedicated way to **define the API**</li>
+      <li>**Common language** back/front</li>
+    </ul>
+  </div>
+
+  <div style="box-sizing: border-box; float: right; width: 50%; padding: 0 5%;">
+    <h4>Relay</h4>
+    <ul>
+      <li>Flow static typing** for free</li>
+      <li>**Conventions**</li>
+    </ul>
+  </div>
+
+</textarea></section>
+<section data-markdown><textarea data-template>
+
+  ### Relay, the good parts
+
+  - Manipulated data is typed <!-- .element: class="fragment" -->
+  - Business-oriented mutations and subscriptions <!-- .element: class="fragment" -->
+  - Pagination and relay helpers around it <!-- .element: class="fragment" -->
+  - Fragments: each component declare its own requirements, parents propagate them <!-- .element: class="fragment" -->
+  - Retrictive way to handle data: relay forces declarativeness of data across components <!-- .element: class="fragment" -->
+
+</textarea></section>
+<section>
+  <section data-transition="none">
+
+    <h3>Example React Tree without Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond
+    ____________________________/   \_____________
+   /              /                               \
+ SABar          Feed                          Conversation
+   |         ___/  \___                        ____/ \____
+   |        /          \                      /           \
+SABarSA FeedItem FeedNotification ConversationTypePost ConversationTypeDM
+                                       /                           \
+                                      ...                          ...
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example React branch</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond
+    ____________________________/
+   /
+ SABar
+   |
+   |
+SABarSA
+
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond
+    ____________________________/
+   /
+ SABar
+   |
+   |
+SABarSA <-- Fragment on RespondSocialAccount with
+              - field socialAccount.avatar
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond
+    ____________________________/
+   /
+ SABar  <-- Fragment on Viewer with conection on respondSocialAccounts with
+   |          - fields id and isActivated
+   |          - fragment SABarSAAccount_respondSa
+SABarSA <-- Fragment on RespondSocialAccount with
+              - field socialAccount.avatar
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond <- Fragment on Viewer with
+    ____________________________/         children requirements as well
+   /
+ SABar  <-- Fragment on Viewer with conection on respondSocialAccounts with
+   |          - fields id and isActivated
+   |          - fragment SABarSAAccount_respondSa
+SABarSA <-- Fragment on RespondSocialAccount with
+              - field socialAccount.avatar
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+                           RespondRenderer
+                                  |
+                               Respond <- Fragment on Viewer with
+    ____________________________/         children requirements as well
+   /
+ SABar  <-- Fragment on Viewer with conection on respondSocialAccounts with
+   |          - fields id and isActivated
+   |          - fragment SABarSAAccount_respondSa
+SABarSA <-- Fragment on RespondSocialAccount with
+              - field socialAccount.avatar
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+ Fetch all requirements -> RespondRenderer
+      in a single query           |
+                               Respond <- Fragment on Viewer with
+    ____________________________/         children requirements as well
+   /
+ SABar  <-- Fragment on Viewer with conection on respondSocialAccounts with
+   |          - fields id and isActivated
+   |          - fragment SABarSAAccount_respondSa
+SABarSA <-- Fragment on RespondSocialAccount with
+              - field socialAccount.avatar
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+ Fetch all requirements -> RespondRenderer
+      in a single query           |      | Pass down fetched fragments
+                               Respond<--+
+    ____________________________/
+   /
+ SABar
+   |
+   |
+SABarSA
+
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+ Fetch all requirements -> RespondRenderer
+      in a single query           |      |
+                               Respond<--+
+    ____________________________/    | Pass down fetched fragments
+   /                                 |
+ SABar<------------------------------+
+   |
+   |
+SABarSA
+
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example branch with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+ Fetch all requirements -> RespondRenderer
+      in a single query           |      |
+                               Respond<--+
+    ____________________________/    |
+   /                                 |
+ SABar<------------------------------+
+   | | Pass down fetched fragments
+   | v
+SABarSA
+
+
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example React tree with Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+                           RespondRenderer
+                                  |
+                               Respond
+    ____________________________/   \_____________
+   /              /                               \
+ SABar          Feed                          Conversation
+   |         ___/  \___                        ____/ \____
+   |        /          \                      /           \
+SABarSA FeedItem FeedNotification ConversationTypePost ConversationTypeDM
+                                       /                           \
+                                      ...                          ...
+    </code></pre>
+
+  </section>
+</section>
+<section>
+
+  <h3>Fragments & Declarativness</h3>
+
+  <pre class="javascript" style="margin-left: -12%; width: 60%; float: left;"><code data-trim data-noescape>
+function RespondFragment(props: Props) {
+  const { respondSa, viewer } = props
+  return [
+    &lt;RespondSaBar
+      selectedRespondSaId={respondSa.id}
+      viewer={viewer}
+    /&gt;
+    &lt;RespondFeed
+      filter={filter}
+      respondSa={respondSa}
+    /&gt;
+    &lt;RespondConversation
+      filter={filter}
+      respondSa={respondSa}
+      viewer={viewer}
+    /&gt;
+  ]
+}
+  </code></pre>
+
+  <pre class="json" style="margin-right: -7%; width: 50%; float: right;"><code data-noescape>
+fragment Respond_viewer on Viewer {
+  ...RespondConversation_viewer
+  ...RespondSaBar_viewer
+}
+
+fragment Respond_respondSa on RespondSocialAccount {
+  id
+  ...RespondConversation_respondSa
+  ...RespondFeed_respondSa
+}
+  </code></pre>
+
+</section>
+<section data-markdown><textarea data-template>
+  ### The drawbacks
+
+  - Relay's retrictions sometimes limits us:
+    - No way to make dynamic queries: can't make a query parametrized by a list of fields or fragments. Must be static.
+    - Caching capabilities aren't obvious
+    - Relay's documentation doesn't go deep (to purposely stay blackboxed)
+
+  - No clear way to manage subscriptions
+</textarea></section>
+
+      </div>
+    </div>
+
+    <img
+      src="../assets/img/logo-mention.svg"
+      height="auto"
+      width="200px"
+      style="position: absolute; top: 3%; left: 4%; opacity: .85;"
+    />
+
+    <script src="../assets/lib/js/head.min.js"></script>
+    <script src="../node_modules/reveal.js/js/reveal.js"></script>
+    <script>
+      Reveal.initialize({
+        controlsTutorial: false,
+        history: true,
+        dependencies: [
+          { src: '../assets/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '../assets/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../assets/plugin/markdown/markdown.min.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../assets/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../assets/plugin/notes/notes.js', async: true },
+        ],
+      });
+    </script>
+  </body>
+</html>

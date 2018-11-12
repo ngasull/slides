@@ -1,0 +1,11 @@
+{
+  "name": "graphql-relay-first-feedback-mdx-deck",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "NONE",
+  "private": true,
+  "devDependencies": {
+    "reveal.js": "^3.7.0"
+  },
+  "dependencies": {}
+}
