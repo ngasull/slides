@@ -109,7 +109,7 @@
   <div style="box-sizing: border-box; float: right; width: 50%; padding: 0 5%;">
     <h4>Relay</h4>
     <ul>
-      <li>Flow static typing** for free</li>
+      <li>**Flow static typing** for free</li>
       <li>**Conventions**</li>
     </ul>
   </div>
@@ -127,6 +127,93 @@
 
 </textarea></section>
 <section>
+
+  <h3>A concrete example</h3>
+
+  <img data-src="./respond.png">
+
+</section>
+<section>
+  <section>
+
+    <h3>React in one slide</h3>
+
+    <div style="margin: 0 -6px; display: flex; align-items: center">
+      <pre class="html fragment fade-in-then-semi-out" style="width: 18%; float: left;"><code data-trim data-noescape>
+        // App.js
+
+        &lt;Respond
+          filter
+          respondSa
+          viewer
+        /&gt;
+      </code></pre>
+
+      <pre class="html fragment fade-in-then-semi-out" style="width: 30%; float: left"><code data-trim data-noescape style="max-height: 120%">
+        // Respond.js
+
+        &lt;RespondSaBar
+          viewer
+        /&gt;
+
+        &lt;RespondFeed
+          filter
+          respondSa
+        /&gt;
+
+        &lt;RespondConversation
+          filter
+          respondSa
+          viewer
+        /&gt;
+      </code></pre>
+
+      <pre class="html fragment fade-in" style="width: 46%; float: left;"><code data-trim data-noescape>
+        // RespondSaBar.js
+        &lt;RespondSaBarSa /&gt;
+                ⋮
+
+        // RespondFeed.js
+        &lt;FeedNotification /&gt;
+                ⋮
+        &lt;RespondFeedItem /&gt;
+                ⋮
+
+        // RespondConversation.js
+        &lt;RespondConversationTypeDM /&gt;
+        &lt;RespondConversationTypePost /&gt;
+      </code></pre>
+    </div>
+
+  </section>
+  <section>
+
+    <pre class="html"><code data-trim data-noescape style="max-height: 120%">
+      &lt;Respond&gt;
+
+        &lt;RespondSaBar&gt;
+          &lt;RespondSaBarSA /&gt;
+                  ⋮
+        &lt;/RespondSaBar&gt;
+
+        &lt;RespondFeed&gt;
+          &lt;FeedNotification /&gt;
+                  ⋮
+          &lt;RespondFeedItem /&gt;
+                  ⋮
+        &lt;/RespondFeed&gt;
+
+        &lt;RespondConversation&gt;
+          &lt;RespondConversationTypeDM /&gt;
+          &lt;RespondConversationTypePost /&gt;
+        &lt;/RespondConversation&gt;
+
+      &lt;/Respond&gt;
+    </code></pre>
+
+  </section>
+</section>
+<section>
   <section data-transition="none">
 
     <h3>Example React Tree without Relay</h3>
@@ -143,6 +230,25 @@
 SABarSA FeedItem FeedNotification ConversationTypePost ConversationTypeDM
                                        /                           \
                                       ...                          ...
+    </code></pre>
+
+  </section>
+  <section data-transition="none">
+
+    <h3>Example React Tree without Relay</h3>
+
+    <pre class="css" style="width: 110%; margin-left: -5%"><code data-noescape>
+
+
+                               Respond
+    ____________________________/   \_____________
+   /              /                               \
+ SABar          Feed                          Conversation
+
+
+
+
+
     </code></pre>
 
   </section>
@@ -341,33 +447,31 @@ SABarSA FeedItem FeedNotification ConversationTypePost ConversationTypeDM
 
   <h3>Fragments & Declarativness</h3>
 
-  <pre class="javascript" style="margin-left: -12%; width: 60%; float: left;"><code data-trim data-noescape>
-function RespondFragment(props: Props) {
-  const { respondSa, viewer } = props
-  return [
-    &lt;RespondSaBar
-      selectedRespondSaId={respondSa.id}
-      viewer={viewer}
-    /&gt;
-    &lt;RespondFeed
-      filter={filter}
-      respondSa={respondSa}
-    /&gt;
-    &lt;RespondConversation
-      filter={filter}
-      respondSa={respondSa}
-      viewer={viewer}
-    /&gt;
-  ]
-}
+  <pre class="html" style="margin-left: -12%; width: 60%; float: left;"><code data-trim data-noescape>
+Respond (React Component):
+  &lt;RespondSaBar
+    selectedRespondSaId={respondSa.id}
+    viewer={viewer}
+  /&gt;
+  &lt;RespondFeed
+    filter={filter}
+    respondSa={respondSa}
+  /&gt;
+  &lt;RespondConversation
+    filter={filter}
+    respondSa={respondSa}
+    viewer={viewer}
+  /&gt;
   </code></pre>
 
-  <pre class="json" style="margin-right: -7%; width: 50%; float: right;"><code data-noescape>
+  <pre class="javascript" style="margin-right: -7%; width: 50%; float: right;"><code data-trim data-noescape>
+// viewer
 fragment Respond_viewer on Viewer {
   ...RespondConversation_viewer
   ...RespondSaBar_viewer
 }
 
+// respondSa
 fragment Respond_respondSa on RespondSocialAccount {
   id
   ...RespondConversation_respondSa
@@ -379,12 +483,26 @@ fragment Respond_respondSa on RespondSocialAccount {
 <section data-markdown><textarea data-template>
   ### The drawbacks
 
-  - Relay's retrictions sometimes limits us:
-    - No way to make dynamic queries: can't make a query parametrized by a list of fields or fragments. Must be static.
-    - Caching capabilities aren't obvious
-    - Relay's documentation doesn't go deep (to purposely stay blackboxed)
+  <ul>
+    <li>
+      Relay's retrictions sometimes limits us:
+      <ul>
+        <li>**No dynamic fields** in queries, must be static. However it enforces fragments and simplicity</li>
+        <li>**Caching** capabilities</li>
+        <li>Relay's documentation is good but limited for now (to purposely stay blackboxed)</li>
+      </ul>
+    </li>
+    <li>No clear way to make subscriptions and mutations work together</li>
+  </ul>
+</textarea></section>
+<section data-markdown><textarea data-template>
 
-  - No clear way to manage subscriptions
+  ### Overall GraphQL & Relay feedback
+
+  - Clear advantages over REST
+  - Way more **simple**, **robust** and **fun** to use than Redux
+  - Puts GraphQL fragments and React components at the same level, both being **composable in parallel**
+
 </textarea></section>
 
       </div>
